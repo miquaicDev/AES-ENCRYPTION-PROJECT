@@ -1,0 +1,287 @@
+m255
+K4
+z2
+!s11f vlog 2020.1 2020.02, Feb 28 2020
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 dD:/Internal archive/AES128_PROJECT/AES-128-ENCRYPTION-PROJECT/Fully_unrolled
+vaddroundkey
+Z1 !s110 1795015142
+!i10b 1
+!s100 ;>B5zR1aBcL1[N=:V?1hL1
+Z2 !s11b Dg1SIo80bB@j0V0VzS_@n1
+IcdA@lL]ij6:kBi;8AW[TI2
+Z3 VDg1SIo80bB@j0V0VzS_@n1
+R0
+Z4 w1795002452
+8src/core/addroundkey.v
+Fsrc/core/addroundkey.v
+!i122 1
+L0 1 8
+Z5 OV;L;2020.1;71
+r1
+!s85 0
+31
+Z6 !s108 1795015142.000000
+!s107 tb/tb_aes_ctr_mode.v|src/CTR mode/aes_ctr_mode.v|src/core/xtimes.v|src/core/subbytes.v|src/core/shiftrows.v|src/core/rotword.v|src/core/mixcolumns.v|src/core/main_round.v|src/core/keyexpansion.v|src/core/final_round.v|src/core/aes_core.v|src/core/addroundkey.v|
+Z7 !s90 -work|work|src/core/addroundkey.v|src/core/aes_core.v|src/core/final_round.v|src/core/keyexpansion.v|src/core/main_round.v|src/core/mixcolumns.v|src/core/rotword.v|src/core/shiftrows.v|src/core/subbytes.v|src/core/xtimes.v|src/CTR mode/aes_ctr_mode.v|tb/tb_aes_ctr_mode.v|
+!i113 1
+Z8 o-work work
+Z9 tCvgOpt 0
+vaes_core
+R1
+!i10b 1
+!s100 b;GTYQCLd6QMaXZMH1U652
+R2
+IWH^zUc9fWdJlc6@D@SzLO1
+R3
+R0
+R4
+8src/core/aes_core.v
+Fsrc/core/aes_core.v
+!i122 1
+L0 1 77
+R5
+r1
+!s85 0
+31
+R6
+Z10 !s107 tb/tb_aes_ctr_mode.v|src/CTR mode/aes_ctr_mode.v|src/core/xtimes.v|src/core/subbytes.v|src/core/shiftrows.v|src/core/rotword.v|src/core/mixcolumns.v|src/core/main_round.v|src/core/keyexpansion.v|src/core/final_round.v|src/core/aes_core.v|src/core/addroundkey.v|
+R7
+!i113 1
+R8
+R9
+vaes_ctr_mode
+R1
+!i10b 1
+!s100 ObDEJ1Gdon[h;]88nS<^00
+R2
+IegS>^f8L@@:X`_fQo[5PE0
+R3
+R0
+w1795015111
+8src/CTR mode/aes_ctr_mode.v
+Fsrc/CTR mode/aes_ctr_mode.v
+!i122 1
+L0 22 83
+R5
+r1
+!s85 0
+31
+R6
+R10
+R7
+!i113 1
+R8
+R9
+vfinal_round
+R1
+!i10b 1
+!s100 bzl5caNAGB3HVk6<R49=_0
+R2
+InCQofL7HJ>6ll^1;T[N]d0
+R3
+R0
+R4
+8src/core/final_round.v
+Fsrc/core/final_round.v
+!i122 1
+L0 1 65
+R5
+r1
+!s85 0
+31
+R6
+R10
+R7
+!i113 1
+R8
+R9
+vkeyexpansion
+R1
+!i10b 1
+!s100 B]54cYT[9U@R5TAz4^`3d3
+R2
+I9@NX[BXJ:Ye<]Pd1STgL72
+R3
+R0
+R4
+8src/core/keyexpansion.v
+Fsrc/core/keyexpansion.v
+!i122 1
+L0 1 92
+R5
+r1
+!s85 0
+31
+R6
+R10
+R7
+!i113 1
+R8
+R9
+vmain_round
+R1
+!i10b 1
+!s100 Y1[V:;SY@:67CWN:=E9hf2
+R2
+IZSB2ITC@k^h[9jPT>zFG?3
+R3
+R0
+R4
+8src/core/main_round.v
+Fsrc/core/main_round.v
+!i122 1
+L0 1 71
+R5
+r1
+!s85 0
+31
+R6
+R10
+R7
+!i113 1
+R8
+R9
+vmixcolumns
+R1
+!i10b 1
+!s100 OjRi5fU1:SF6[j6Tbi4G51
+R2
+IaYTdE3KWSzZ:`S:oZ4@363
+R3
+R0
+R4
+8src/core/mixcolumns.v
+Fsrc/core/mixcolumns.v
+!i122 1
+L0 1 28
+R5
+r1
+!s85 0
+31
+R6
+R10
+R7
+!i113 1
+R8
+R9
+vrotword
+R1
+!i10b 1
+!s100 ^_VD:KzbPkfI=o`FazDj;0
+R2
+IToOK8ANT3c65WFoVfAP?n0
+R3
+R0
+R4
+8src/core/rotword.v
+Fsrc/core/rotword.v
+!i122 1
+L0 1 6
+R5
+r1
+!s85 0
+31
+R6
+R10
+R7
+!i113 1
+R8
+R9
+vshiftrows
+R1
+!i10b 1
+!s100 Xlh0:RfK7[4]PN_1M]cXB1
+R2
+I^XAdnXGc[U1bU2L3VcUSg1
+R3
+R0
+w1795002773
+8src/core/shiftrows.v
+Fsrc/core/shiftrows.v
+!i122 1
+L0 1 13
+R5
+r1
+!s85 0
+31
+R6
+R10
+R7
+!i113 1
+R8
+R9
+vsubbytes
+R1
+!i10b 1
+!s100 Oh>=A]h^jeiE>POTb0`_Y2
+R2
+In?cMeW3JbG8fjTnL^;`123
+R3
+R0
+R4
+8src/core/subbytes.v
+Fsrc/core/subbytes.v
+!i122 1
+L0 1 81
+R5
+r1
+!s85 0
+31
+R6
+R10
+R7
+!i113 1
+R8
+R9
+vtb_aes_ctr_mode
+R1
+!i10b 1
+!s100 z^ShEh5=P>zEBa1Q2dXPj3
+R2
+I8lGB[HPP@9l8Zzel3``0>2
+R3
+R0
+w1795015135
+8tb/tb_aes_ctr_mode.v
+Ftb/tb_aes_ctr_mode.v
+!i122 1
+L0 19 274
+R5
+r1
+!s85 0
+31
+R6
+R10
+R7
+!i113 1
+R8
+R9
+vxtimes
+R1
+!i10b 1
+!s100 Nz^V;7ojagJhRl`dPX[X70
+R2
+IF@mG^OInhbbE1aQ^4hzRK1
+R3
+R0
+R4
+8src/core/xtimes.v
+Fsrc/core/xtimes.v
+!i122 1
+L0 1 7
+R5
+r1
+!s85 0
+31
+R6
+R10
+R7
+!i113 1
+R8
+R9

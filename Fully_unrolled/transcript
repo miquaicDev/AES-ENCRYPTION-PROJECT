@@ -1,0 +1,42 @@
+# vsim -c -do "run -all; quit -f" work.tb_aes_ctr_mode 
+# Start time: 22:19:04 on Nov 18,2026
+# Loading work.tb_aes_ctr_mode
+# Loading work.aes_ctr_mode
+# Loading work.aes_core
+# Loading work.addroundkey
+# Loading work.final_round
+# Loading work.keyexpansion
+# Loading work.rotword
+# Loading work.subbytes
+# Loading work.shiftrows
+# Loading work.main_round
+# Loading work.mixcolumns
+# Loading work.xtimes
+# run -all
+# === Test 1: Encrypt back-to-back (Separate iv_load) ===
+# [315000 ns] PASS blk 0 | 874d6191b620e3261bef6864990db6ce
+# [325000 ns] PASS blk 1 | 9806f66b7970fdff8617187bb9fffdff
+# [335000 ns] PASS blk 2 | 5ae4df3edbd5d35e5b4f09020db03eab
+# [345000 ns] PASS blk 3 | 1e031dda2fbe03d1792170a0f3009cee
+# === Test 2: Encrypt back-to-back (Simultaneous iv_load + valid_in) ===
+# [685000 ns] PASS blk 0 | 874d6191b620e3261bef6864990db6ce
+# [695000 ns] PASS blk 1 | 9806f66b7970fdff8617187bb9fffdff
+# [705000 ns] PASS blk 2 | 5ae4df3edbd5d35e5b4f09020db03eab
+# [715000 ns] PASS blk 3 | 1e031dda2fbe03d1792170a0f3009cee
+# === Test 3: Decrypt with bubbles (Simultaneous iv_load + valid_in) ===
+# [1055000 ns] PASS blk 0 | 6bc1bee22e409f96e93d7e117393172a
+# [1085000 ns] PASS blk 1 | ae2d8a571e03ac9c9eb76fac45af8e51
+# [1095000 ns] PASS blk 2 | 30c81c46a35ce411e5fbc1191a0a52ef
+# [1115000 ns] PASS blk 3 | f69f2445df4f9b17ad2b417be66c3710
+# === Test 4: Reload IV, re-encrypt (Simultaneous iv_load + valid_in) ===
+# [1455000 ns] PASS blk 0 | 874d6191b620e3261bef6864990db6ce
+# [1465000 ns] PASS blk 1 | 9806f66b7970fdff8617187bb9fffdff
+# [1475000 ns] PASS blk 2 | 5ae4df3edbd5d35e5b4f09020db03eab
+# [1485000 ns] PASS blk 3 | 1e031dda2fbe03d1792170a0f3009cee
+# --------------------------------------------------
+# ALL PASS: 16 blocks checked, 0 errors
+# --------------------------------------------------
+# ** Note: $finish    : tb/tb_aes_ctr_mode.v(276)
+#    Time: 1585 ns  Iteration: 1  Instance: /tb_aes_ctr_mode
+# End time: 22:19:05 on Nov 18,2026, Elapsed time: 0:00:01
+# Errors: 0, Warnings: 0
