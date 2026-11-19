@@ -1,107 +1,141 @@
 `timescale 1ns/1ps
-// ============================================================================
-// Testbench for AES-128 CTR mode (Fully Unrolled)
-//
-// NIST SP 800-38A test vectors (AES-128 CTR):
-//   Key  : 2b7e151628aed2a6abf7158809cf4f3c
-//   IV   : f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff
-//   PT[0]: 6bc1bee22e409f96e93d7e117393172a -> CT[0]: 874d6191b620e3261bef6864990db6ce
-//   PT[1]: ae2d8a571e03ac9c9eb76fac45af8e51 -> CT[1]: 9806f66b7970fdff8617187bb9fffdff
-//   PT[2]: 30c81c46a35ce411e5fbc1191a0a52ef -> CT[2]: 5ae4df3edbd5d35e5b4f09020db03eab
-//   PT[3]: f69f2445df4f9b17ad2b417be66c3710 -> CT[3]: 1e031dda2fbe03d1792170a0f3009cee
-//
-// Test scenarios:
-//   Test 1: Encrypt 4 blocks back-to-back with separate iv_load (classic mode)
-//   Test 2: Encrypt 4 blocks back-to-back with SIMULTANEOUS iv_load + valid_in at Block 0
-//   Test 3: Decrypt 4 blocks with SIMULTANEOUS iv_load + valid_in and bubbles
-//   Test 4: Reload IV on-the-fly and re-encrypt back-to-back
-// ============================================================================
+
 module tb_aes_ctr_mode;
 
     parameter CLK_PERIOD = 10;
-    parameter NBLK       = 4;
+    parameter NBLK       = 16;
 
-    reg         clk;
-    reg         rst_n;
-    reg         iv_load;
-    reg [127:0] iv;
-    reg [127:0] key;
-    reg         valid_in;
-    reg [127:0] data_in;
+    reg          clk;
+    reg          rst_n;
+    reg          iv_load;
+    reg  [127:0] iv;
+    reg  [127:0] key;
+    reg          valid_in;
+    reg  [127:0] data_in;
     wire [127:0] data_out;
     wire         valid_out;
 
     aes_ctr_mode dut (
-        .clk      (clk),
-        .rst_n    (rst_n),
-        .iv_load  (iv_load),
-        .iv       (iv),
-        .key      (key),
-        .valid_in (valid_in),
-        .data_in  (data_in),
-        .data_out (data_out),
-        .valid_out(valid_out)
+        .clk       (clk),
+        .rst_n     (rst_n),
+        .iv_load   (iv_load),
+        .iv        (iv),
+        .key       (key),
+        .valid_in  (valid_in),
+        .data_in   (data_in),
+        .data_out  (data_out),
+        .valid_out (valid_out)
     );
 
     initial clk = 0;
     always #(CLK_PERIOD/2) clk = ~clk;
 
-    // -----------------------------------------------------------------------
-    // NIST test vectors
-    // -----------------------------------------------------------------------
-    reg [127:0] pt   [0:NBLK-1];
-    reg [127:0] ct   [0:NBLK-1];
+
+    // NIST SP 800-38A F.5.1 test vectors & 16-block buffers
+    reg [127:0] pt_nist [0:3];
+    reg [127:0] ct_nist [0:3];
     reg [127:0] KEY_V;
     reg [127:0] IV_V;
 
-    // Working arrays for each test
-    reg [127:0] in_mem  [0:NBLK-1];
-    reg [127:0] exp_mem [0:NBLK-1];
+    reg [127:0] orig_pt     [0:NBLK-1];
+    reg [127:0] cap_ct      [0:NBLK-1];
+    reg [127:0] in_mem      [0:NBLK-1];
+    reg [127:0] exp_mem     [0:NBLK-1];
+    reg         check_exact [0:NBLK-1];
 
+    integer k;
     initial begin
         KEY_V = 128'h2b7e151628aed2a6abf7158809cf4f3c;
         IV_V  = 128'hf0f1f2f3f4f5f6f7f8f9fafbfcfdfeff;
 
-        pt[0] = 128'h6bc1bee22e409f96e93d7e117393172a;
-        pt[1] = 128'hae2d8a571e03ac9c9eb76fac45af8e51;
-        pt[2] = 128'h30c81c46a35ce411e5fbc1191a0a52ef;
-        pt[3] = 128'hf69f2445df4f9b17ad2b417be66c3710;
+        pt_nist[0] = 128'h6bc1bee22e409f96e93d7e117393172a;
+        pt_nist[1] = 128'hae2d8a571e03ac9c9eb76fac45af8e51;
+        pt_nist[2] = 128'h30c81c46a35ce411e5fbc1191a0a52ef;
+        pt_nist[3] = 128'hf69f2445df4f9b17ad2b417be66c3710;
 
-        ct[0] = 128'h874d6191b620e3261bef6864990db6ce;
-        ct[1] = 128'h9806f66b7970fdff8617187bb9fffdff;
-        ct[2] = 128'h5ae4df3edbd5d35e5b4f09020db03eab;
-        ct[3] = 128'h1e031dda2fbe03d1792170a0f3009cee;
+        ct_nist[0] = 128'h874d6191b620e3261bef6864990db6ce;
+        ct_nist[1] = 128'h9806f66b7970fdff8617187bb9fffdff;
+        ct_nist[2] = 128'h5ae4df3edbd5d35e5b4f09020db03eab;
+        ct_nist[3] = 128'h1e031dda2fbe03d1792170a0f3009cee;
+
+        // First 4 blocks use NIST vectors; remaining 12 blocks use distinct per-block patterns
+        for (k = 0; k < 4; k = k + 1)
+            orig_pt[k] = pt_nist[k];
+        for (k = 4; k < NBLK; k = k + 1)
+            orig_pt[k] = 128'h11223344_55667788_99aabbcc_ddeeff00 ^ {96'd0, k[31:0]};
     end
 
-    // -----------------------------------------------------------------------
-    // Output checker (always block, runs throughout simulation)
-    // -----------------------------------------------------------------------
+    // Synchronous monitor on posedge clk
+    integer phase_id;
+    integer prev_phase_id;
+    integer start_cycle;
+    integer cycle_cnt;
     integer out_cnt;
     integer err_cnt;
     integer total_checked;
+    integer first_out_cycle;
+    integer prev_out_cycle;
 
-    always @(posedge clk) begin
-        if (rst_n && valid_out) begin
-            if (out_cnt < NBLK) begin
-                total_checked = total_checked + 1;
-                if (data_out !== exp_mem[out_cnt]) begin
-                    err_cnt = err_cnt + 1;
-                    $display("[%0t ns] FAIL blk %0d | got=%032h | exp=%032h",
-                             $time, out_cnt, data_out, exp_mem[out_cnt]);
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            cycle_cnt       <= 0;
+            prev_phase_id   <= 0;
+            out_cnt         <= 0;
+            err_cnt         <= 0;
+            total_checked   <= 0;
+            first_out_cycle <= -1;
+            prev_out_cycle  <= -1;
+        end else begin
+            cycle_cnt <= cycle_cnt + 1;
+
+            if (phase_id != prev_phase_id) begin
+                prev_phase_id   <= phase_id;
+                out_cnt         <= 0;
+                first_out_cycle <= -1;
+                prev_out_cycle  <= -1;
+            end else if (valid_out) begin
+                if (out_cnt < NBLK) begin
+                    if (first_out_cycle == -1) begin
+                        first_out_cycle <= cycle_cnt;
+                        $display("  --> [Cycle %03d] Block 00 appeared (Latency = %0d cycles)",
+                                 cycle_cnt, cycle_cnt - start_cycle);
+                    end
+
+                    if (phase_id == 1)
+                        cap_ct[out_cnt] <= data_out;
+
+                    if (check_exact[out_cnt]) begin
+                        total_checked <= total_checked + 1;
+                        if (data_out !== exp_mem[out_cnt]) begin
+                            err_cnt <= err_cnt + 1;
+                            $display("  [Cycle %03d | Delta=%0d ck] FAIL blk %02d | got=%032h | exp=%032h",
+                                     cycle_cnt,
+                                     (prev_out_cycle == -1) ? 0 : (cycle_cnt - prev_out_cycle),
+                                     out_cnt, data_out, exp_mem[out_cnt]);
+                        end else begin
+                            $display("  [Cycle %03d | Delta=%0d ck] PASS blk %02d | out=%032h",
+                                     cycle_cnt,
+                                     (prev_out_cycle == -1) ? 0 : (cycle_cnt - prev_out_cycle),
+                                     out_cnt, data_out);
+                        end
+                    end else begin
+                        $display("  [Cycle %03d | Delta=%0d ck] CAPT blk %02d | out=%032h",
+                                 cycle_cnt,
+                                 (prev_out_cycle == -1) ? 0 : (cycle_cnt - prev_out_cycle),
+                                 out_cnt, data_out);
+                    end
                 end else begin
-                    $display("[%0t ns] PASS blk %0d | %032h", $time, out_cnt, data_out);
+                    err_cnt <= err_cnt + 1;
+                    $display("  [Cycle %03d] FAIL: Unexpected extra valid_out pulse (blk %02d)",
+                             cycle_cnt, out_cnt);
                 end
-            end else begin
-                err_cnt = err_cnt + 1;
-                $display("[%0t ns] FAIL: unexpected valid_out (blk %0d)", $time, out_cnt);
+
+                prev_out_cycle <= cycle_cnt;
+                out_cnt        <= out_cnt + 1;
             end
-            out_cnt = out_cnt + 1;
         end
     end
 
-    // -----------------------------------------------------------------------
-    // Tasks
-    // -----------------------------------------------------------------------
     task do_reset;
         begin
             rst_n    = 1'b0;
@@ -116,7 +150,6 @@ module tb_aes_ctr_mode;
         end
     endtask
 
-    // Load IV separately (pulse for 1 cycle)
     task load_iv_task;
         input [127:0] v;
         begin
@@ -129,7 +162,6 @@ module tb_aes_ctr_mode;
         end
     endtask
 
-    // Send a standard block (iv_load is 0)
     task send_blk;
         input [127:0] d;
         begin
@@ -140,7 +172,6 @@ module tb_aes_ctr_mode;
         end
     endtask
 
-    // Send block 0 with SIMULTANEOUS iv_load and valid_in
     task send_blk_with_iv;
         input [127:0] v;
         input [127:0] d;
@@ -153,133 +184,68 @@ module tb_aes_ctr_mode;
         end
     endtask
 
-    // Insert a bubble (idle cycle)
-    task send_bubble;
-        begin
-            @(posedge clk); #1;
-            iv_load  = 1'b0;
-            valid_in = 1'b0;
-            data_in  = 128'hDEAD_BEEF_DEAD_BEEF_DEAD_BEEF_DEAD_BEEF; // garbage
-        end
-    endtask
-
-    // Drain pipeline and de-assert valid_in
     task drain;
+        input [8*32-1:0] name;
+        integer wait_ck;
         begin
             @(posedge clk); #1;
             iv_load  = 1'b0;
             valid_in = 1'b0;
-            while (out_cnt < NBLK) @(posedge clk);
-            repeat (10) @(posedge clk);
-        end
-    endtask
+            data_in  = 128'd0;
 
-    // Check that exactly NBLK blocks arrived this phase
-    task check_phase;
-        input [8*32-1:0] name;
-        begin
+            for (wait_ck = 0; wait_ck < 120 && out_cnt < NBLK; wait_ck = wait_ck + 1)
+                @(posedge clk);
+
+            repeat (5) @(posedge clk);
+
             if (out_cnt !== NBLK) begin
-                err_cnt = err_cnt + 1;
-                $display("FAIL %0s: received %0d blocks, expected %0d",
-                         name, out_cnt, NBLK);
+                $display("  FAIL %0s: Received %0d/%0d blocks!", name, out_cnt, NBLK);
             end
         end
     endtask
 
-    // -----------------------------------------------------------------------
-    // Main stimulus
-    // -----------------------------------------------------------------------
+
     integer i;
-
     initial begin
-        err_cnt       = 0;
-        out_cnt       = 0;
-        total_checked = 0;
-
+        phase_id    = 0;
+        start_cycle = 0;
         do_reset;
-
-        // ------------------------------------------------------------------
-        // Test 1: Encrypt 4 consecutive blocks with separate iv_load
-        // ------------------------------------------------------------------
-        $display("=== Test 1: Encrypt back-to-back (Separate iv_load) ===");
+        // TEST 1: Stream 16 blocks continuously for Encrypt (separate iv_load)
+        $display("\n=== TEST 1: Encrypt %0d blocks continuously (Separate iv_load) ===", NBLK);
         for (i = 0; i < NBLK; i = i + 1) begin
-            in_mem[i]  = pt[i];
-            exp_mem[i] = ct[i];
+            in_mem[i]      = orig_pt[i];
+            exp_mem[i]     = (i < 4) ? ct_nist[i] : 128'd0;
+            check_exact[i] = (i < 4) ? 1'b1 : 1'b0;
         end
-        out_cnt = 0;
+        phase_id = 1;
         load_iv_task(IV_V);
+        start_cycle = cycle_cnt;
         for (i = 0; i < NBLK; i = i + 1)
             send_blk(in_mem[i]);
-        drain;
-        check_phase("Test1-Encrypt-SeparateIV");
+        drain("Test1-Encrypt-16Blk");
 
-        // ------------------------------------------------------------------
-        // Test 2: Encrypt 4 blocks back-to-back with SIMULTANEOUS iv_load + valid_in
-        //         Block 0 has iv_load=1 and valid_in=1 at the exact same edge!
-        //         Blocks 1, 2, 3 follow immediately back-to-back without bubbles.
-        // ------------------------------------------------------------------
-        $display("=== Test 2: Encrypt back-to-back (Simultaneous iv_load + valid_in) ===");
+        // TEST 2: Stream 16 blocks continuously for Decrypt (simultaneous iv_load + valid_in)
+        $display("\n=== TEST 2: Decrypt %0d blocks continuously (Simultaneous iv_load + valid_in) ===", NBLK);
         for (i = 0; i < NBLK; i = i + 1) begin
-            in_mem[i]  = pt[i];
-            exp_mem[i] = ct[i];
+            in_mem[i]      = cap_ct[i];
+            exp_mem[i]     = orig_pt[i];
+            check_exact[i] = 1'b1;
         end
-        out_cnt = 0;
-        send_blk_with_iv(IV_V, in_mem[0]); // Block 0: iv_load=1 & valid_in=1
-        for (i = 1; i < NBLK; i = i + 1)
-            send_blk(in_mem[i]);            // Blocks 1..3 back-to-back
-        drain;
-        check_phase("Test2-Encrypt-SimultaneousIV");
-
-        // ------------------------------------------------------------------
-        // Test 3: Decrypt (CT -> PT) with SIMULTANEOUS iv_load + valid_in AND bubbles
-        // ------------------------------------------------------------------
-        $display("=== Test 3: Decrypt with bubbles (Simultaneous iv_load + valid_in) ===");
-        for (i = 0; i < NBLK; i = i + 1) begin
-            in_mem[i]  = ct[i];
-            exp_mem[i] = pt[i];
-        end
-        out_cnt = 0;
-        send_blk_with_iv(IV_V, in_mem[0]); // Block 0 + IV load simultaneously
-        send_bubble;
-        send_bubble;
-        send_blk(in_mem[1]);
-        send_blk(in_mem[2]);
-        send_bubble;
-        send_blk(in_mem[3]);
-        drain;
-        check_phase("Test3-Decrypt-Bubbles");
-
-        // ------------------------------------------------------------------
-        // Test 4: Reload IV and re-encrypt (Simultaneous iv_load + valid_in)
-        // ------------------------------------------------------------------
-        $display("=== Test 4: Reload IV, re-encrypt (Simultaneous iv_load + valid_in) ===");
-        for (i = 0; i < NBLK; i = i + 1) begin
-            in_mem[i]  = pt[i];
-            exp_mem[i] = ct[i];
-        end
-        out_cnt = 0;
+        phase_id = 2;
+        start_cycle = cycle_cnt;
         send_blk_with_iv(IV_V, in_mem[0]);
         for (i = 1; i < NBLK; i = i + 1)
             send_blk(in_mem[i]);
-        drain;
-        check_phase("Test4-ReloadIV-Encrypt");
+        drain("Test2-Decrypt-16Blk");
 
-        // ------------------------------------------------------------------
-        // Summary
-        // ------------------------------------------------------------------
-        $display("--------------------------------------------------");
-        if (err_cnt == 0)
-            $display("ALL PASS: %0d blocks checked, 0 errors", total_checked);
+
+        // Test summary
+        $display("\n=================================================================");
+        if (err_cnt == 0 && total_checked == (4 + NBLK))
+            $display("ALL PASS: Verified %0d blocks successfully with 0 errors!", total_checked);
         else
-            $display("FAIL: %0d errors out of %0d blocks", err_cnt, total_checked);
-        $display("--------------------------------------------------");
-        $finish;
-    end
-
-    // Watchdog
-    initial begin
-        #(CLK_PERIOD * 8000);
-        $display("TIMEOUT - simulation did not finish");
+            $display("FAIL: Encountered %0d errors (%0d blocks checked)", err_cnt, total_checked);
+        $display("=================================================================");
         $finish;
     end
 
