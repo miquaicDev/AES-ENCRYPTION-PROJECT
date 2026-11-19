@@ -12,13 +12,13 @@ module shiftrows(
     
 endmodule
 
-// columns: quan he word --> 32bit
+// columns: word --> 32bit
     // after_subbytes[127:96];
     // after_subbytes[95:64];
     // after_subbytes[63:32];
     // after_subbytes[31:0];
 
-// rows: quan he chieu ngang (32bit), chieu cao (8bit)
+// rows: horizon (32bit), vertical (8bit)
     // {after_subbytes[127:120], after_subbytes[95:88], after_subbytes[63:56], after_subbytes[31:24]};
     // {after_subbytes[119:112], after_subbytes[87:80], after_subbytes[55:48], after_subbytes[23:16]};
     // {after_subbytes[111:104], after_subbytes[79:72], after_subbytes[47:40], after_subbytes[15:8]};
